@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Fly Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #000;
+            background-color: #add8e6;
+        }
+        #startBtn {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .player {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .player img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flappy Fly Game</h1>
+    <button id="startBtn">Start Game</button>
+    <p>Time Remaining: <span id="timer">60</span> seconds</p>
+    <p>Score: <span id="score">0</span></p>
+    <canvas id="gameCanvas" width="480" height="320"></canvas>
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <div id="topPlayers"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const timerDisplay = document.getElementById('timer');
+        const scoreDisplay = document.getElementById('score');
+        const topPlayersDiv = document.getElementById('topPlayers');
+
+        let fly = { x: 50, y: 150, width: 20, height: 20, velocity: 0 };
+        let pipes = [];
+        let score = 0;
+        let gameInterval;
+        let timerInterval;
+        let timeLeft = 60;
+        let isGameRunning = false;
+
+        const players = [];
+
+        function updateLeaderboard() {
+            players.sort((a, b) => b.score - a.score);
+            topPlayersDiv.innerHTML = '';
+            players.slice(0, 3).forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player';
+                playerDiv.innerHTML = `<img src="${player.photo}" alt="Player Photo"> <span>${player.name} - ${player.score}</span>`;
+                topPlayersDiv.appendChild(playerDiv);
+            });
+        }
+
+        function startGame() {
+            if (isGameRunning) return;
+            isGameRunning = true;
+            resetGame();
+            updateLeaderboard();
+            gameInterval = setInterval(gameLoop, 20);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            isGameRunning = false;
+
+            const playerName = prompt("Enter your name:", "Player");
+            const playerPhoto = prompt("Enter photo URL (or leave blank for default):", "https://via.placeholder.com/50");
+            players.push({ name: playerName, score: score, photo: playerPhoto || "https://via.placeholder.com/50" });
+
+            updateLeaderboard();
+            alert("Game Over! Your score: " + score);
+        }
+
+        function resetGame() {
+            fly = { x: 50, y: 120, width: 20, height: 20, velocity: 0 };
+            pipes = [];
+            score = 0;
+            timeLeft = 60;
+            timerDisplay.textContent = timeLeft;
+            scoreDisplay.textContent = score;
+        }
+
+        function createPipe() {
+            const height = Math.floor(Math.random() * (canvas.height / 2));
+            pipes.push({ x: canvas.width, y: 0, width: 30, height });
+            pipes.push({ x: canvas.width, y: height + 80, width: 30, height: canvas.height - height - 80 });
+        }
+
+        function updateGame() {
+            fly.velocity += 0.2;
+            fly.y += fly.velocity;
+
+            if (fly.y < 0 || fly.y + fly.height > canvas.height) {
+                endGame();
+            }
+
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
+                if (pipe.x + pipe.width < 0) {
+                    pipes.shift();
+                    score++;
+                    scoreDisplay.textContent = score;
+                }
+                if (
+                    fly.x < pipe.x + pipe.width &&
+                    fly.x + fly.width > pipe.x &&
+                    fly.y < pipe.y + pipe.height &&
+                    fly.y + fly.height > pipe.y
+                ) {
+                    endGame();
+                }
+            });
+
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                createPipe();
+            }
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(fly.x, fly.y, fly.width, fly.height);
+
+            ctx.fillStyle = 'green';
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, pipe.y, pipe.width, pipe.height);
+            });
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                if (!isGameRunning) return;
+                fly.velocity = -5;
+            }
+        });
+
+        startBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
