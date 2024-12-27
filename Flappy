@@ -100,11 +100,14 @@
             clearInterval(timerInterval);
             isGameRunning = false;
 
-            const playerName = prompt("Enter your name:", "Player");
-            const playerPhoto = prompt("Enter photo URL (or leave blank for default):", "https://via.placeholder.com/50");
-            players.push({ name: playerName, score: score, photo: playerPhoto || "https://via.placeholder.com/50" });
+            const topScores = players.slice(0, 3).map(player => player.score);
+            if (topScores.length < 3 || score > Math.min(...topScores)) {
+                const playerName = prompt("You made it to the leaderboard! Enter your name:", "Player");
+                const playerPhoto = prompt("Enter photo URL (or leave blank for default):", "https://via.placeholder.com/50");
+                players.push({ name: playerName, score: score, photo: playerPhoto || "https://via.placeholder.com/50" });
+                updateLeaderboard();
+            }
 
-            updateLeaderboard();
             alert("Game Over! Your score: " + score);
         }
 
@@ -124,7 +127,7 @@
         }
 
         function updateGame() {
-            fly.velocity += 0.2;
+            fly.velocity += 0.1;
             fly.y += fly.velocity;
 
             if (fly.y < 0 || fly.y + fly.height > canvas.height) {
@@ -172,7 +175,7 @@
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space') {
                 if (!isGameRunning) return;
-                fly.velocity = -5;
+                fly.velocity = -3; // Reduced lift height by decreasing velocity
             }
         });
 
