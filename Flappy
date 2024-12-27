@@ -173,9 +173,12 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space') {
+            if (event.code === 'Space' || event.code === 'ArrowUp') {
                 if (!isGameRunning) return;
-                fly.velocity = -3; // Reduced lift height by decreasing velocity
+                fly.velocity = -3; // Reduced lift height
+            } else if (event.code === 'ArrowDown') {
+                if (!isGameRunning) return;
+                fly.y += 10; // Move down slightly
             }
         });
 
